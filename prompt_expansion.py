@@ -16,6 +16,7 @@ import comfy.model_management as model_management
 from transformers import AutoTokenizer, AutoModelForCausalLM, set_seed
 from comfy.model_patcher import ModelPatcher
 from .util import join_prompts, remove_empty_str
+from .model_loader import load_file_from_url
 
 # Restore the original stdout
 sys.stdout = original_stdout
@@ -27,6 +28,15 @@ fooocus_magic_split = [
     ', intricate,',
 ]
 dangrous_patterns = '[]【】()（）|:：'
+
+def download_models():
+    url = 'https://huggingface.co/lllyasviel/misc/resolve/main/fooocus_expansion.bin'
+    model_dir = fooocus_expansion_path
+    file_name = 'pytorch_model.bin'
+    if not os.path.exists(os.path.join(model_dir, file_name)) and os.path.exists("/stable-diffusion-cache/models/fooocus_expansion"):
+        os.system(f'cp /stable-diffusion-cache/models/fooocus_expansion/fooocus_expansion.bin {model_dir}/{file_name}')
+
+    load_file_from_url(url=url, model_dir=model_dir, file_name=file_name)
 
 
 def safe_str(x):
@@ -44,6 +54,7 @@ def remove_pattern(x, pattern):
 
 class FooocusExpansion:
     def __init__(self):
+        download_models()
         self.tokenizer = AutoTokenizer.from_pretrained(fooocus_expansion_path)
         self.model = AutoModelForCausalLM.from_pretrained(fooocus_expansion_path)
         self.model.eval()
